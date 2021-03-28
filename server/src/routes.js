@@ -26,7 +26,6 @@ module.exports = (app) => {
       })
       res.send({
         treffleID: info.dataValues.treffleID,
-        commonName: info.dataValues.commonName,
         light: info.dataValues.light,
         atmoHumidity: info.dataValues.atmoHumidity,
         minPrecp: info.dataValues.minPrecp,

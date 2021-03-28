@@ -13,7 +13,7 @@
             <b-container fluid>
               <b-row>
                 <b-col sm="6">
-                  <b-img src="https://picsum.photos/1024/400/?image=41" fluid alt="Responsive image"></b-img>
+                  <b-img src="https://bs.plantnet.org/image/o/d3097f130ca6c054b04f9d1681805ce2f147f4a1" fluid style="height:90%;"></b-img>
                 </b-col>
                 <b-col sm="6">
                   <b-skeleton-table
@@ -29,15 +29,14 @@
                       <span v-else class="text-danger">{{ data.item['Water-Level'] }}</span>
                     </template>
                   </b-table>
+                  <b-navbar variant="faded" type="light">
+                    <div class="col text-center">
+                      Please find the most current info above.
+                    </div>
+                  </b-navbar>
                 </b-col>
               </b-row>
             </b-container>
-            <!-- <b-navbar variant="faded" type="light">
-              <div class="col text-center">
-                <b-button style="margin-right:5%;">Button</b-button>
-                <b-button>Button</b-button>
-              </div>
-            </b-navbar> -->
           </div>
           <div class="shadow bg-white rounded">
             <b-row>
