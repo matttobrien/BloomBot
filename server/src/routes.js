@@ -1,11 +1,6 @@
 // const fetch = require('node-fetch')
 const { PlantInfo, TrefleInfo } = require('./models')
 const db = require('./models/index')
-const jwt = require('jsonwebtoken')
-
-function jwtSignBloomBot (bot) {
-  return jwt.sign(bot, 'qD5ncQn9q6cA7S8s')
-}
 
 module.exports = (app) => {
   app.get('/init', async (req, res) => {
@@ -29,9 +24,7 @@ module.exports = (app) => {
           trefleID: 155728
         }
       })
-      const token = jwtSignBloomBot(info)
       res.send({
-        token: token,
         treffleID: info.dataValues.treffleID,
         commonName: info.dataValues.commonName,
         light: info.dataValues.light,
@@ -72,34 +65,6 @@ module.exports = (app) => {
       res.send(info)
     } catch (error) {
       res.status(500).send()
-    }
-  })
-
-  app.use(function (req, res, next) {
-    // check post parameters for token
-    const token = req.body.token
-    // decode token
-    if (token) {
-      // verifies secret and checks exp
-      jwt.verify(token, 'qD5ncQn9q6cA7S8s', function (err, decoded) {
-        if (err) {
-          return res.json({
-            success: false,
-            message: 'Failed to authenticate token.'
-          })
-        } else {
-          // if everything is good, save to request for use in other routes
-          req.decoded = decoded
-          next()
-        }
-      })
-    } else {
-      // if there is no token
-      // return an error
-      return res.status(403).send({
-        success: false,
-        message: 'No token provided.'
-      })
     }
   })
 
