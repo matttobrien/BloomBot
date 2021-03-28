@@ -1,0 +1,203 @@
+
+#include "DHT.h"
+#include <Wire.h>
+#include "Adafruit_SI1145.h"
+#include <ArduinoJson.h>
+#include <Ethernet.h>
+#include <ArduinoHttpClient.h>
+
+//#define int WaterEmpty; 
+#define DHTPIN 5
+#define DHTTYPE DHT11
+
+//Assign pins to Variables
+static const uint8_t SoilWet = 326;
+static const uint8_t SoilDry = 665;
+const int SoilMoistureSensor = A0;
+const int WaterPump = 12;
+const int UltraVioletSensor = A2;
+const int TempHumiditySensor = 8;
+const int UltraSonicSensor_Trig = 3;
+const int UltraSonicSensor_Echo = 2;
+
+DHT dht(DHTPIN, DHTTYPE);
+
+const int UltraVioletLight = 7;
+
+
+//Send Variables
+int WaterLevel;
+int MoistureLevel;
+int UVSensorLevel;
+int HumidityAmbient;
+int TemperatureAmbient;
+
+
+//Process Variables
+int SoilMoisture;
+
+bool isFarenheit = false;
+int WaterEmpty=0; //***********TODO:SCAN WATER HEIGHT
+
+void HumidityTemperatureChecker();
+void UltraVioletLightDection(int sensor);
+void SoilMoistureChecker(int sensor);
+void PumpWater();
+void WaterLevelDetection(int Trig, int Echo);
+
+EthernetClient ethernet; // ethernet client variable
+HttpClient client = HttpClient(ethernet, "ec2-99-79-33-25.ca-central-1.compute.amazonaws.com", 80); // the http client to connect with webserver
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED}; // unique MAC on network
+int    HTTP_PORT   = 80; //webserver port
+char   HOST_NAME[] = "ec2-99-79-33-25.ca-central-1.compute.amazonaws.com"; // ip of webserver
+
+
+void setup() {
+  //Innies
+  pinMode(SoilMoistureSensor, INPUT);
+  pinMode(UltraVioletSensor, INPUT);
+  pinMode(TempHumiditySensor, INPUT);
+  pinMode(UltraSonicSensor_Echo, INPUT);
+ 
+  //Outties
+  pinMode(UltraSonicSensor_Trig, OUTPUT);
+  pinMode(WaterPump, OUTPUT);
+  pinMode(UltraVioletLight, OUTPUT);
+
+  Serial.begin(9600);
+ 
+  dht.begin();
+  digitalWrite(WaterPump, LOW);
+
+
+
+  
+
+}
+
+
+
+void loop() {//*********************************************************************************************************************
+  // put your main code here, to run repeatedly:
+  
+  SoilMoistureChecker(SoilMoistureSensor); //-Checked-TRANS
+  UltraVioletLightDection(UltraVioletSensor);//-Checked-TRANS
+  HumidityTemperatureChecker();//-Checked-TRANS
+  UltraVioletRingLightActivation(UltraVioletLight, 1);  //-Checked-TRANS
+  delay(60000);
+
+}
+
+void UltraVioletRingLightActivation(int sensor, int level) {
+  if(level == 1){
+    digitalWrite(sensor, HIGH);
+  } else{
+    digitalWrite(sensor, LOW);
+  }
+  
+}
+
+
+void HumidityTemperatureChecker() {
+  HumidityAmbient = (int)dht.readHumidity(); 
+  TemperatureAmbient = (int)dht.readTemperature(isFarenheit);
+  Serial.print("Humidity");
+  Serial.println(HumidityAmbient);
+  Serial.print("Temp");
+  Serial.println(TemperatureAmbient);
+}
+
+
+void UltraVioletLightDection(int sensor){
+
+ // UVSensorLevel = map(analogRead(sensor), 0, 1023, 0, 1200);
+
+  int uv_temp = analogRead(sensor);
+
+  if(uv_temp < 227){
+    UVSensorLevel = 0;
+    }
+
+  if(uv_temp >= 227 && uv_temp < 318){
+    UVSensorLevel = 1;
+    }
+
+  if(uv_temp >= 318 && uv_temp < 408){
+    UVSensorLevel = 2;
+    }
+
+  if(uv_temp >= 408 && uv_temp < 503){
+    UVSensorLevel = 3;
+    }
+
+  if(uv_temp >= 503 && uv_temp < 606){
+    UVSensorLevel = 4;
+    }
+
+  if(uv_temp >= 606 && uv_temp < 696){
+    UVSensorLevel = 5;
+    }
+
+  if(uv_temp >= 696 && uv_temp < 795){
+    UVSensorLevel = 6;
+    }
+
+  if(uv_temp >= 795 && uv_temp < 881){
+    UVSensorLevel = 7;
+    }
+
+  if(uv_temp >= 881 && uv_temp < 976){
+    UVSensorLevel = 8;
+    }
+
+  if(uv_temp >= 976 && uv_temp < 1170){
+    UVSensorLevel = 9;
+    }
+
+  if(uv_temp >= 1170){
+    UVSensorLevel = 10;
+    }
+
+  
+  Serial.print("UV Sensor: ");
+  Serial.println(uv_temp); //UV1 - 227 mV, UV2 - 318 mV, UV3 - 408 mV, UV4 - 503 mV, UV5 - 606 mV, UV6 - 696 mV, , UV7 - 795 mV, UV8 - 881 mV, UV9 - 976 mV, UV10 - 1170 mV (1.17 volts)
+}
+
+void SoilMoistureChecker(int sensor){
+  SoilMoisture = analogRead(SoilMoistureSensor);
+  Serial.print("Soild Mositure Level: ");
+  Serial.print(SoilMoisture);
+  if(SoilMoisture >= SoilDry){
+    PumpWater();
+  }
+  return;
+}
+
+void PumpWater() {
+  WaterLevelDetection(UltraSonicSensor_Trig, UltraSonicSensor_Echo);
+  
+  if( WaterLevel > WaterEmpty) {
+    digitalWrite(WaterPump, HIGH);
+  } else {
+    Serial.println("Water Level Too Low!");
+  }
+  delay(5000);
+  digitalWrite(WaterPump, LOW);
+  return;
+}
+
+void WaterLevelDetection(int Trig, int Echo){
+  long duration;
+  digitalWrite(Trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(Trig, HIGH); // Sets the trigPin HIGH (ACTIVE) for 10 microseconds
+  delayMicroseconds(10);
+  digitalWrite(Trig, LOW);
+  
+  duration = pulseIn(Echo, HIGH); // Reads the echoPin, returns the sound wave travel time in microseconds
+  WaterLevel = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
+  // Displays the distance on the Serial Monitor
+  Serial.print("Distance: ");
+  Serial.print(WaterLevel);
+  Serial.print(" cm \n");
+}
