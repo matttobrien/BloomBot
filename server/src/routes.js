@@ -2,6 +2,10 @@
 const { PlantInfo, TrefleInfo } = require('./models')
 const db = require('./models/index')
 
+// this is unsecure due to time constraints and memory restirctions on our arduino
+// i would have liked to include a JWT to authenitcate requests
+// and included user accounts, but this is the best we could do
+
 module.exports = (app) => {
   app.get('/init', async (req, res) => {
     try {
