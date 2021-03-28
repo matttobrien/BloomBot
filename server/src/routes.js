@@ -59,7 +59,8 @@ module.exports = (app) => {
         },
         order: [
           ['createdAt', 'DESC']
-        ]
+        ],
+        limit: 10
       })
       res.send(info)
     } catch (error) {
