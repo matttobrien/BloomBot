@@ -1,10 +1,10 @@
-import api from '@/services/api'
+import api from "@/services/api";
 
 export default {
-  getPlants () {
-    return api().get('getPlants')
+  getPlants() {
+    return api().get("getPlants");
   },
-  getPlantInfo (trefleID) {
-    return api().post('getPlantInfo', trefleID)
-  }
-}
+  getPlantInfo(trefleID) {
+    return api().post("getPlantInfo", trefleID);
+  },
+};

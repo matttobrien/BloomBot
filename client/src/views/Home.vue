@@ -4,16 +4,27 @@
       <b-row>
         <b-col cols="12">
           <div class="shadow bg-white rounded" id="container">
-            <b-navbar variant="faded" type="dark" style="background-color:#27ae60;">
+            <b-navbar
+              variant="faded"
+              type="dark"
+              style="background-color: #27ae60"
+            >
               <b-navbar-brand tag="h1" class="mb-0">Welcome</b-navbar-brand>
             </b-navbar>
             <b-navbar variant="faded" type="light">
-              <b-form-select v-model="selected" :options="plants"></b-form-select>
+              <b-form-select
+                v-model="selected"
+                :options="plants"
+              ></b-form-select>
             </b-navbar>
             <b-container fluid>
               <b-row>
                 <b-col sm="6">
-                  <b-img src="https://bs.plantnet.org/image/o/d3097f130ca6c054b04f9d1681805ce2f147f4a1" fluid style="height:90%;"></b-img>
+                  <b-img
+                    src="http://calphotos.berkeley.edu/imgs/512x768/0000_0000/0107/1122.jpeg"
+                    fluid
+                    style="height: 95%"
+                  ></b-img>
                 </b-col>
                 <b-col sm="6">
                   <b-skeleton-table
@@ -25,8 +36,14 @@
                   ></b-skeleton-table>
                   <b-table v-else stacked outlined :items="plantInfo">
                     <template #cell(Water-Level)="data">
-                      <span v-if="data.item['Water-Level'] <= 155" class="text-danger">{{ data.item['Water-Level'] }}</span>
-                      <span v-else class="text-danger">{{ data.item['Water-Level'] }}</span>
+                      <span
+                        v-if="data.item['Water-Level'] <= 155"
+                        class="text-danger"
+                        >{{ data.item["Water-Level"] }}</span
+                      >
+                      <span v-else class="text-danger">{{
+                        data.item["Water-Level"]
+                      }}</span>
                     </template>
                   </b-table>
                   <b-navbar variant="faded" type="light">
@@ -41,7 +58,11 @@
           <div class="shadow bg-white rounded">
             <b-row>
               <b-col cols="12">
-                <b-navbar variant="faded" type="dark" style="background-color:#27ae60;">
+                <b-navbar
+                  variant="faded"
+                  type="dark"
+                  style="background-color: #27ae60"
+                >
                   <b-navbar-brand tag="h1" class="mb-0">History</b-navbar-brand>
                 </b-navbar>
                 <b-skeleton-table
@@ -62,91 +83,90 @@
 </template>
 
 <script>
-import PlantService from '@/services/plantService'
-import { format } from 'date-fns'
+import PlantService from "@/services/plantService";
+import { format } from "date-fns";
 export default {
   name: "Home",
   data() {
     return {
       loading: false,
       loaded: false,
-      animation: 'none',
+      animation: "none",
       selected: null,
-      plants: [
-        { value: null, text: 'Please select an option' }
-      ],
+      plants: [{ value: null, text: "Please select an option" }],
       plantInfo: [],
-      plantHistory: []
-    }
+      plantHistory: [],
+    };
   },
   watch: {
     selected: function (val) {
-      this.getPlantInfo(val)
+      this.getPlantInfo(val);
     },
     loading: function (val) {
       if (val) {
-        this.animation = 'wave'
+        this.animation = "wave";
       } else {
-        this.animation = 'none'
-      }
-    }
-  },
-  created () {
-    this.getPlants()
-  },
-  methods: {
-    async getPlants () {
-      try {
-        const respose = await PlantService.getPlants()
-        for (let i in respose.data) {
-          this.plants.push({
-            value: respose.data[i].trefleID, text: respose.data[i].commonName
-          })
-        }
-      } catch (error) {
-        console.error(error)
+        this.animation = "none";
       }
     },
-    async getPlantInfo (trefleID) {
+  },
+  created() {
+    this.getPlants();
+  },
+  methods: {
+    async getPlants() {
       try {
-        this.loaded = false
-        this.loading = true
-        this.plantInfo = []
+        const respose = await PlantService.getPlants();
+        for (let i in respose.data) {
+          this.plants.push({
+            value: respose.data[i].trefleID,
+            text: respose.data[i].commonName,
+          });
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    async getPlantInfo(trefleID) {
+      try {
+        this.loaded = false;
+        this.loading = true;
+        this.plantInfo = [];
         const response = await PlantService.getPlantInfo({
-          trefleID: trefleID
-        })
+          trefleID: trefleID,
+        });
         for (let i in response.data) {
           if (i == 0) {
             this.plantInfo.push({
               "Soil-Moisture": response.data[i].soilMoisture,
               "Water-Level": response.data[i].waterLevel,
-              "Light": response.data[i].light,
-              "Temperature": response.data[i].temp,
-              "Humidity": response.data[i].humidity
-            })
+              Light: response.data[i].light,
+              Temperature: response.data[i].temp,
+              Humidity: response.data[i].humidity,
+            });
           }
-          let date = new Date(response.data[i].createdAt)
+          let date = new Date(response.data[i].createdAt);
           this.plantHistory.push({
-            "Time": format(date, 'MM/dd/yyyy HH:mm'),
+            Time: format(date, "MM/dd/yyyy HH:mm"),
             "Soil Moisture": response.data[i].soilMoisture,
             "Water Level": response.data[i].waterLevel,
-            "Light": response.data[i].light,
-            "Temperature": response.data[i].temp,
-            "Humidity": response.data[i].humidity
-          })
+            Light: response.data[i].light,
+            Temperature: response.data[i].temp,
+            Humidity: response.data[i].humidity,
+          });
         }
-        this.loading = false
-        this.loaded = true
+        this.loading = false;
+        this.loaded = true;
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     },
-    rowClass (item, type) {
-      console.log(item)
-      if (!item || type !== 'row') return
-      if (item["Water Level"] >= 155) return 'table-warning'
-    }
-  }
+    rowClass(item, type) {
+      console.log(item);
+      if (!item || type !== "row") return;
+      if (item["Water Level"] >= 155) return "table-warning";
+    },
+  },
 };
 </script>
 
